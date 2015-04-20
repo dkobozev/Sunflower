@@ -82,6 +82,22 @@ class ItemList(PluginBase):
 		self._container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
 		self._container.set_shadow_type(gtk.SHADOW_IN)
 
+		gtk.rc_parse_string('''
+    style "zen-style" {
+        base[NORMAL] = "#212121"
+        text[NORMAL] = "#dcdccc"
+
+        GtkTreeView::horizontal-separator = 0
+    }
+
+    class "GtkTreeView" style "zen-style"
+
+    style "zen-font" {
+        font_name = "Terminus 8"
+    }
+
+    widget "*TreeView*" style "zen-font"
+                ''')
 		self._item_list = gtk.TreeView()
 		self._item_list.set_fixed_height_mode(True)
 

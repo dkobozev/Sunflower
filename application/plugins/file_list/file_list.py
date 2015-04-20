@@ -313,9 +313,10 @@ class FileList(ItemList):
 			column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
 
 			column_name = column.get_data('name')
-			font_size = options.get('font_size_{0}'.format(column_name)) or \
-				self._default_column_font_size.get(column_name, None) or \
-				int(gtk.Settings().get_property('gtk-font-name').split()[-1])
+			#font_size = options.get('font_size_{0}'.format(column_name)) or \
+			#	self._default_column_font_size.get(column_name, None) or \
+			#	int(gtk.Settings().get_property('gtk-font-name').split()[-1])
+			font_size = None
 
 			# no font size was specified, skip column
 			if font_size is None:
@@ -1581,7 +1582,7 @@ class FileList(ItemList):
 					is_dir,
 					False,
 					is_link,
-					None,
+					'#94bff3' if is_dir else None,
 					icon,
 					None,
 					file_stat.user_id,
