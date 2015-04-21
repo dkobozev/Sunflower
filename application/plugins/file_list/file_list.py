@@ -42,6 +42,10 @@ class Column:
 	GROUP_ID = 16
 	EMBLEMS = 17
 
+class Color:
+	EXEC = '#c3bf9f'
+	DIR  = '#94bff3'
+	LINK = '#93e0e3'
 
 class FileList(ItemList):
 	"""General file list plugin
@@ -51,6 +55,8 @@ class FileList(ItemList):
 	and make your own content provider.
 
 	"""
+	EXEC_MASK = 0111
+
 	column_editor = None
 	number_split = re.compile('([0-9]+)')
 
@@ -1390,7 +1396,18 @@ class FileList(ItemList):
 		if not is_parent:
 			# get current status of iter
 			selected = not item_list.get_value(selected_iter, Column.SELECTED)
-			color = (None, self._selection_color)[selected]
+
+			color = item_list.get_value(selected_iter, Column.IS_DIR)
+			is_link = item_list.get_value(selected_iter, Column.IS_LINK)
+			file_mode = item_list.get_value(selected_iter, Column.MODE)
+
+			if is_dir:
+				color = Color.DIR
+			elif is_link:
+				color = Color.LINK
+			elif file_mode & self.EXEC_MASK:
+				color = Color.EXEC
+			color = (color, self._selection_color)[selected]
 
 			if is_dir:
 				self._dirs['selected'] += [-1, 1][selected]
@@ -1443,7 +1460,6 @@ class FileList(ItemList):
 
 		# values to be set in columns
 		selected = not self._store.get_value(current_iter, Column.SELECTED)
-		color = (None, self._selection_color)[selected]
 
 		for index in xrange(start_path[0], end_path[0] + 1):
 			current_iter = self._store.get_iter((index, ))
@@ -1454,6 +1470,17 @@ class FileList(ItemList):
 			status = self._store.get_value(current_iter, Column.SELECTED)
 
 			# set selection
+			color = item_list.get_value(current_iter, Column.IS_DIR)
+			is_link = item_list.get_value(current_iter, Column.IS_LINK)
+			file_mode = item_list.get_value(current_iter, Column.MODE)
+
+			if is_dir:
+				color = Color.DIR
+			elif is_link:
+				color = Color.LINK
+			elif file_mode & self.EXEC_MASK:
+				color = Color.EXEC
+			color = (color, self._selection_color)[selected]
 			self._store.set_value(current_iter, Column.COLOR, color)
 			self._store.set_value(current_iter, Column.SELECTED, selected)
 
@@ -1569,6 +1596,14 @@ class FileList(ItemList):
 				file_info = (filename, '')
 				formated_file_size = '<DIR>'
 
+			color = None
+			if is_dir:
+				color = Color.DIR
+			elif is_link:
+				color = Color.LINK
+			elif file_mode & self.EXEC_MASK:
+				color = Color.EXEC
+
 			data = (
 					os.path.join(parent_path, filename) if parent_path else filename,
 					file_info[0],
@@ -1582,7 +1617,7 @@ class FileList(ItemList):
 					is_dir,
 					False,
 					is_link,
-					'#94bff3' if is_dir else None,
+					color,
 					icon,
 					None,
 					file_stat.user_id,
@@ -2242,7 +2277,15 @@ class FileList(ItemList):
 
 			elif len(exclude_list) > 0:
 				# if out exclude list has items, we need to deselect them
-				row[Column.COLOR] = None
+				color = None
+				if row[Column.IS_DIR]:
+					color = Color.DIR
+				elif row[Column.IS_LINK]:
+					color = Color.LINK
+				elif row[Column.MODE] & self.EXEC_MASK:
+					color = Color.EXEC
+
+				row[Column.COLOR] = color
 				row[Column.SELECTED] = False
 
 			# update dir/file count
@@ -2276,7 +2319,15 @@ class FileList(ItemList):
 		for row in self._store:
 			# set selection
 			if not row[Column.IS_PARENT_DIR] and fnmatch.fnmatch(row[Column.NAME], pattern):
-				row[Column.COLOR] = None
+				color = None
+				if row[Column.IS_DIR]:
+					color = Color.DIR
+				elif row[Column.IS_LINK]:
+					color = Color.LINK
+				elif row[Column.MODE] & self.EXEC_MASK:
+					color = Color.EXEC
+
+				row[Column.COLOR] = color
 				row[Column.SELECTED] = False
 
 				result += 1
@@ -2316,7 +2367,15 @@ class FileList(ItemList):
 					row[Column.COLOR] = self._selection_color
 					row[Column.SELECTED] = True
 				else:
-					row[Column.COLOR] = None
+					color = None
+					if row[Column.IS_DIR]:
+						color = Color.DIR
+					elif row[Column.IS_LINK]:
+						color = Color.LINK
+					elif row[Column.MODE] & self.EXEC_MASK:
+						color = Color.EXEC
+
+					row[Column.COLOR] = color
 					row[Column.SELECTED] = False
 
 			# update dir/file count
